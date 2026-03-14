@@ -8,6 +8,7 @@ const animalRoutes = require("./routes/animalRoutes");
 const droneRoutes = require("./routes/droneRoutes");
 const alertRoutes = require("./routes/alertRoutes");
 const soundRoutes = require("./routes/soundRoutes");
+const mapRoutes = require("./routes/mapRoutes");
 
 const app = express();
 const server = http.createServer(app);
@@ -24,6 +25,7 @@ app.use("/api", humanRoutes);
 app.use("/api", droneRoutes);
 app.use("/api", animalRoutes);
 app.use("/api", alertRoutes);
+app.use("/api", mapRoutes);
 
 app.get("/", (req, res) => {
   res.send("Backend is running");

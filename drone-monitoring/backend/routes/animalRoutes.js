@@ -12,56 +12,64 @@ const { generateHumanWarning } = require("../services/warningService");
 // detect animal
 router.post("/animals/detect", (req, res) => {
 
-  const { type, latitude, longitude } = req.body;
+    const io = req.app.get("io");
 
-  const animal = addAnimalDetection(type, latitude, longitude);
-  const proximity = checkAnimalProximity(animal);
-  const proximityAlert = buildAnimalProximityAlert(proximity);
+    const { type, latitude, longitude } = req.body;
 
-  let savedAlert = null;
-  let humanWarning = null;
+    const animal = addAnimalDetection(type, latitude, longitude);
+    io.emit("animal_detected", animal);
 
-  if (proximityAlert) {
-    savedAlert = addAlert(proximityAlert);
-    humanWarning = generateHumanWarning(proximity);
-  }
+    const proximity = checkAnimalProximity(animal);
+    const proximityAlert = buildAnimalProximityAlert(proximity);
 
-  res.json({
-    message: "Animal detected",
-    animal,
-    proximityWarning: proximity,
-    alert: savedAlert,
-    warningForHuman: humanWarning
-  });
+    let savedAlert = null;
+    let humanWarning = null;
+
+    if (proximityAlert) {
+        savedAlert = addAlert(proximityAlert);
+        humanWarning = generateHumanWarning(proximity);
+    }
+
+    if (savedAlert) {
+        io.emit("alert_created", savedAlert);
+    }
+
+    res.json({
+        message: "Animal detected",
+        animal,
+        proximityWarning: proximity,
+        alert: savedAlert,
+        warningForHuman: humanWarning
+    });
 });
 
 // test for direction
 router.get("/animals/test-direction", (req, res) => {
-  const direction = calculateDirection(
-    45.5017,
-    -73.5673,
-    45.5020,
-    -73.5670
-  );
+    const direction = calculateDirection(
+        45.5017,
+        -73.5673,
+        45.5020,
+        -73.5670
+    );
 
-  res.json({ direction });
+    res.json({ direction });
 });
 
 // test for distance
 router.get("/animals/test-distance", (req, res) => {
-  const d = calculateDistanceMeters(
-    45.5017,
-    -73.5673,
-    45.5020,
-    -73.5670
-  );
+    const d = calculateDistanceMeters(
+        45.5017,
+        -73.5673,
+        45.5020,
+        -73.5670
+    );
 
-  res.json({ distanceMeters: d });
+    res.json({ distanceMeters: d });
 });
 
 // get all animals
 router.get("/animals", (req, res) => {
-  res.json(getAnimals());
+    res.json(getAnimals());
 });
 
 module.exports = router;
