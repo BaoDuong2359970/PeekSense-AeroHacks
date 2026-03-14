@@ -14,7 +14,15 @@ const io = new Server(server, {
   cors: { origin: "*" }
 });
 
+app.set("io", io);
+
 app.use(express.json());
+
+app.use("/api", humanRoutes);
+
+io.on("connection", (socket) => {
+  console.log("Client connected:", socket.id);
+});
 
 app.use("/api", droneRoutes);
 app.use("/api", animalRoutes);
