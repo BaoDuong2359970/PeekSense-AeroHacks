@@ -1,39 +1,27 @@
 const express = require("express");
 const router = express.Router();
+const { droneState } = require("../services/droneSimulator");
 
-// Temporary drone state
-let droneState = {
-  droneId: "drone-01",
-  latitude: 0,
-  longitude: 0,
-  battery: 100,
-  status: "patrolling",
-  timestamp: null
-};
+// get current drone state
+router.get("/drone/state", (req, res) => {
+  res.json(droneState);
+});
 
-// update drone telemetry
+// optional manual telemetry update
 router.post("/drone/telemetry", (req, res) => {
-
   const { latitude, longitude, battery, status } = req.body;
 
-  droneState = {
-    droneId: "drone-01",
-    latitude,
-    longitude,
-    battery,
-    status,
-    timestamp: new Date()
-  };
+  if (latitude !== undefined) droneState.latitude = latitude;
+  if (longitude !== undefined) droneState.longitude = longitude;
+  if (battery !== undefined) droneState.battery = battery;
+  if (status !== undefined) droneState.status = status;
+
+  droneState.timestamp = new Date();
 
   res.json({
     message: "Telemetry updated",
     droneState
   });
-});
-
-// get drone state
-router.get("/drone/state", (req, res) => {
-  res.json(droneState);
 });
 
 module.exports = router;
