@@ -7,6 +7,7 @@ const humanRoutes = require("./routes/humanRoutes");
 const animalRoutes = require("./routes/animalRoutes");
 const droneRoutes = require("./routes/droneRoutes");
 const alertRoutes = require("./routes/alertRoutes");
+const soundRoutes = require("./routes/soundRoutes");
 
 const app = express();
 const server = http.createServer(app);
@@ -18,15 +19,10 @@ app.set("io", io);
 
 app.use(express.json());
 
+app.use("/api", soundRoutes);
 app.use("/api", humanRoutes);
-
-io.on("connection", (socket) => {
-  console.log("Client connected:", socket.id);
-});
-
 app.use("/api", droneRoutes);
 app.use("/api", animalRoutes);
-app.use("/api", humanRoutes);
 app.use("/api", alertRoutes);
 
 app.get("/", (req, res) => {
@@ -34,7 +30,7 @@ app.get("/", (req, res) => {
 });
 
 io.on("connection", (socket) => {
-  console.log("Client connected");
+  console.log("Client connected:", socket.id);
 });
 
 startDroneSimulation(io);

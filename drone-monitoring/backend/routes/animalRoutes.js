@@ -7,9 +7,11 @@ const { checkAnimalProximity } = require("../services/proximityService");
 const { addAnimalDetection, getAnimals } = require("../services/animalService");
 const { buildAnimalProximityAlert } = require("../services/threatAlertService");
 const { addAlert } = require("../services/alertService");
+const { generateHumanWarning } = require("../services/warningService");
 
 // detect animal
 router.post("/animals/detect", (req, res) => {
+
   const { type, latitude, longitude } = req.body;
 
   const animal = addAnimalDetection(type, latitude, longitude);
@@ -17,16 +19,19 @@ router.post("/animals/detect", (req, res) => {
   const proximityAlert = buildAnimalProximityAlert(proximity);
 
   let savedAlert = null;
+  let humanWarning = null;
 
   if (proximityAlert) {
     savedAlert = addAlert(proximityAlert);
+    humanWarning = generateHumanWarning(proximity);
   }
 
   res.json({
     message: "Animal detected",
     animal,
     proximityWarning: proximity,
-    alert: savedAlert
+    alert: savedAlert,
+    warningForHuman: humanWarning
   });
 });
 
