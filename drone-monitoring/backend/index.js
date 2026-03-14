@@ -1,10 +1,11 @@
 const express = require("express");
 const http = require("http");
 const { Server } = require("socket.io");
+const { startDroneSimulation } = require("./services/droneSimulator");
 
+const humanRoutes = require("./routes/humanRoutes");
 const animalRoutes = require("./routes/animalRoutes");
 const droneRoutes = require("./routes/droneRoutes");
-const { startDroneSimulation } = require("./services/droneSimulator");
 
 const app = express();
 const server = http.createServer(app);
@@ -16,6 +17,7 @@ app.use(express.json());
 
 app.use("/api", droneRoutes);
 app.use("/api", animalRoutes);
+app.use("/api", humanRoutes);
 
 app.get("/", (req, res) => {
   res.send("Backend is running");
