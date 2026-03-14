@@ -1,26 +1,36 @@
 const express = require("express");
 const router = express.Router();
+
 const { calculateDistanceMeters } = require("../helper/distance");
 const { calculateDirection } = require("../helper/direction");
 const { checkAnimalProximity } = require("../services/proximityService");
 const { addAnimalDetection, getAnimals } = require("../services/animalService");
+const { buildAnimalProximityAlert } = require("../services/threatAlertService");
+const { addAlert } = require("../services/alertService");
 
 // detect animal
 router.post("/animals/detect", (req, res) => {
-
   const { type, latitude, longitude } = req.body;
 
   const animal = addAnimalDetection(type, latitude, longitude);
-
   const proximity = checkAnimalProximity(animal);
+  const proximityAlert = buildAnimalProximityAlert(proximity);
+
+  let savedAlert = null;
+
+  if (proximityAlert) {
+    savedAlert = addAlert(proximityAlert);
+  }
 
   res.json({
     message: "Animal detected",
     animal,
+    proximityWarning: proximity,
+    alert: savedAlert
   });
 });
 
-//test for direction
+// test for direction
 router.get("/animals/test-direction", (req, res) => {
   const direction = calculateDirection(
     45.5017,
@@ -32,7 +42,7 @@ router.get("/animals/test-direction", (req, res) => {
   res.json({ direction });
 });
 
-//test for distance
+// test for distance
 router.get("/animals/test-distance", (req, res) => {
   const d = calculateDistanceMeters(
     45.5017,
@@ -42,22 +52,6 @@ router.get("/animals/test-distance", (req, res) => {
   );
 
   res.json({ distanceMeters: d });
-});
-
-router.post("/animals/detect", (req, res) => {
-
-  const { type, latitude, longitude } = req.body;
-
-  const animal = addAnimalDetection(type, latitude, longitude);
-
-  const proximity = checkAnimalProximity(animal);
-
-  res.json({
-    message: "Animal detected",
-    animal,
-    proximityWarning: proximity
-  });
-
 });
 
 // get all animals
