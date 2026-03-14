@@ -1,22 +1,20 @@
 const express = require("express");
 const http = require("http");
-const cors = require("cors");
 const { Server } = require("socket.io");
+const { startDroneSimulation } = require("./services/droneSimulator");
 
 const humanRoutes = require("./routes/humanRoutes");
+const animalRoutes = require("./routes/animalRoutes");
+const droneRoutes = require("./routes/droneRoutes");
 
 const app = express();
 const server = http.createServer(app);
-
 const io = new Server(server, {
-  cors: {
-    origin: "*",
-  },
+  cors: { origin: "*" }
 });
 
 app.set("io", io);
 
-app.use(cors());
 app.use(express.json());
 
 app.use("/api", humanRoutes);
@@ -25,20 +23,19 @@ io.on("connection", (socket) => {
   console.log("Client connected:", socket.id);
 });
 
-const droneRoutes = require("./routes/droneRoutes");
-
 app.use("/api", droneRoutes);
+app.use("/api", animalRoutes);
+app.use("/api", humanRoutes);
 
 app.get("/", (req, res) => {
   res.send("Backend is running");
 });
 
-app.get("/api/health", (req, res) => {
-  res.json({
-    ok: true,
-    message: "Backend is running",
-  });
+io.on("connection", (socket) => {
+  console.log("Client connected");
 });
+
+startDroneSimulation(io);
 
 server.listen(3000, () => {
   console.log("Server running on port 3000");
