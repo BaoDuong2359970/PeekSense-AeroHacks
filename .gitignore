@@ -1,5 +1,17 @@
+# Python
 python/.venv/
-.venv/
-venv/
+python/.venv.zip
+*.pyc
 __pycache__/
-*.pycpython/.venv/
+
+# Node
+node_modules/
+
+# Env files
+.env
+.env.*
+
+# Generated files
+generated-audio/
+*.mp3
+*.wav
