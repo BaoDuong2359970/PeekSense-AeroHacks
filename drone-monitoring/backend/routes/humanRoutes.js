@@ -1,15 +1,17 @@
 const express = require("express");
 const router = express.Router();
 
-const { 
-    postHumanDetection,
-    getHumanIncidents,
-    postHumanResponse
-} = require("../controllers/humanController");
+const { handleHumanDetection, respondToAssistanceCheck } = require("../controllers/humanController");
+const { createHumanDetection, getHumans } = require("../services/detection/humanService");
+const { getIncidents } = require("../services/stores/humanStore");
 
-router.post("/detections/human", postHumanDetection);
-router.get("/incidents", getHumanIncidents);
-router.post("/assistance-checks/:id/response", postHumanResponse);
+router.post("/detections/human", handleHumanDetection);
+
+router.get("/incidents", (req, res) => {
+  res.json(getIncidents());
+});
+
+router.post("/assistance-checks/:id/response", respondToAssistanceCheck);
 
 // const { addHuman, getHumans } = require("../services/humanService");
 

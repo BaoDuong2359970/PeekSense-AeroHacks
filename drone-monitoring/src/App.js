@@ -1,13 +1,7 @@
-import React from 'react';
-import Map from './Map';
+import MapView from "./components/MapView";
 
 function App() {
-  return (
-       <div className="App">
-      <h1>Drone Monitoring System</h1>
-      <Map />
-    </div>
-  );
+  return <MapView />;
 }
 
 export default App;

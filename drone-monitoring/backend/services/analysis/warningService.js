@@ -4,7 +4,6 @@ function generateHumanWarning(proximity) {
   const animal = capitalize(proximity.animalType);
 
   let advice = "";
-
   if (proximity.distance < 30) {
     advice = "Remain calm and slowly move in the opposite direction.";
   } else if (proximity.distance < 80) {
