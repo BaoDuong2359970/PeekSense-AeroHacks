@@ -14,17 +14,17 @@ function buildAnimalProximityAlert(proximityData) {
       animalId: proximityData.animalId,
       animalType: proximityData.animalType,
       distance: proximityData.distance,
-      direction: proximityData.direction
+      direction: proximityData.direction,
+      latitude: proximityData.latitude,
+      longitude: proximityData.longitude
     }
   };
 }
 
 function calculateSeverity(distance) {
-
   if (distance < 30) return "critical";
   if (distance < 80) return "high";
   if (distance < 150) return "medium";
-
   return "low";
 }
 

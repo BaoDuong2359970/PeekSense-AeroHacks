@@ -1,20 +1,15 @@
-const { calculateDistanceMeters } = require("../helper/distance");
-const { calculateDirection } = require("../helper/direction");
-const { getHumans } = require("./humanService");
+const { calculateDistanceMeters } = require("../../helper/distance");
+const { calculateDirection } = require("../../helper/direction");
+const { getHumans } = require("../detection/humanService");
 
 function checkAnimalProximity(animal) {
-
   const humans = getHumans();
-
-  if (humans.length === 0) {
-    return null;
-  }
+  if (humans.length === 0) return null;
 
   let closestHuman = null;
   let closestDistance = Infinity;
 
-  humans.forEach(human => {
-
+  humans.forEach((human) => {
     const distance = calculateDistanceMeters(
       human.latitude,
       human.longitude,
@@ -26,7 +21,6 @@ function checkAnimalProximity(animal) {
       closestDistance = distance;
       closestHuman = human;
     }
-
   });
 
   if (!closestHuman) return null;
@@ -43,9 +37,10 @@ function checkAnimalProximity(animal) {
     animalId: animal.id,
     distance: Math.round(closestDistance),
     direction,
-    animalType: animal.type
+    animalType: animal.type,
+    latitude: animal.latitude,
+    longitude: animal.longitude
   };
-
 }
 
 module.exports = { checkAnimalProximity };

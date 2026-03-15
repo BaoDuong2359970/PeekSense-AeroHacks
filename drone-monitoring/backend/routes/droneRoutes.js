@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const { droneState } = require("../services/droneSimulator");
+const { droneState } = require("../services/infrastructure/droneSimulator");
 
 // get current drone state
 router.get("/drone/state", (req, res) => {

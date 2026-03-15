@@ -1,33 +1,32 @@
 const express = require("express");
 const router = express.Router();
 
-const { 
-    postHumanDetection,
-    getHumanIncidents,
-    postHumanResponse
-} = require("../controllers/humanController");
+const { handleHumanDetection, respondToAssistanceCheck } = require("../controllers/humanController");
+const { createHumanDetection, getHumans } = require("../services/detection/humanService");
+const { getIncidents } = require("../services/stores/humanStore");
 
-router.post("/detections/human", postHumanDetection);
-router.get("/incidents", getHumanIncidents);
-router.post("/assistance-checks/:id/response", postHumanResponse);
+router.post("/detections/human", handleHumanDetection);
 
-const { addHuman, getHumans } = require("../services/humanService");
+router.get("/incidents", (req, res) => {
+  res.json(getIncidents());
+});
+
+router.post("/assistance-checks/:id/response", respondToAssistanceCheck);
 
 router.post("/humans/detect", (req, res) => {
-    const io = req.app.get("io");
-    const { latitude, longitude } = req.body;
+  const io = req.app.get("io");
+  const human = createHumanDetection(req.body);
 
-    const human = addHuman(latitude, longitude);
-    io.emit("human_detected", human);
+  io.emit("human_detected", human);
 
-    res.json({
-        message: "Human detected",
-        human
-    });
+  res.json({
+    message: "Human detected",
+    human
+  });
 });
 
 router.get("/humans", (req, res) => {
-    res.json(getHumans());
+  res.json(getHumans());
 });
 
 module.exports = router;

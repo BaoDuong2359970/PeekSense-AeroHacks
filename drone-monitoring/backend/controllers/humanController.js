@@ -1,139 +1,91 @@
-const { detections, incidents, alerts } = require("../services/stores/humanStore");
-const { assistanceChecks } = require("../services/stores/assistanceCheckStore");
-const { startAssistanceCheck, handleTranscriptResponse } = require("../services/conversationService");
-// const { get } = require("../routes/droneRoutes");
+const { createHumanDetection } = require("../services/detection/humanService");
+const { evaluateDistress } = require("../services/distressRulesService");
+const { addIncident } = require("../services/stores/humanStore");
+const { addAlert } = require("../services/infrastructure/alertService");
+const { addCheck, updateCheckResponse } = require("../services/stores/assistanceCheckStore");
+const { buildAssistancePrompt, buildEmergencyPrompt } = require("../services/AI/conversationService");
 
-function generateId(prefix) {
-  return `${prefix}_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+function handleHumanDetection(req, res) {
+  const io = req.app.get("io");
+  const detection = createHumanDetection(req.body);
+
+  io.emit("human_detected", detection);
+
+  const distress = evaluateDistress(detection);
+  let incident = null;
+  let alert = null;
+  let assistanceCheck = null;
+
+  if (distress.isDistress) {
+    incident = addIncident({
+      id: "incident_" + Date.now(),
+      type: "human_distress",
+      severity: distress.severity,
+      reason: distress.reason,
+      timestamp: new Date(),
+      humanId: detection.id,
+      location: {
+        latitude: detection.latitude,
+        longitude: detection.longitude
+      }
+    });
+
+    assistanceCheck = addCheck({
+      id: "check_" + Date.now(),
+      humanId: detection.id,
+      incidentId: incident.id,
+      prompt: buildAssistancePrompt(),
+      status: "pending",
+      createdAt: new Date()
+    });
+
+    alert = addAlert({
+      category: "human_safety",
+      type: "distress",
+      severity: distress.severity,
+      message: distress.reason,
+      timestamp: new Date(),
+      location: {
+        latitude: detection.latitude,
+        longitude: detection.longitude
+      },
+      details: {
+        humanId: detection.id,
+        incidentId: incident.id,
+        assistanceCheckId: assistanceCheck.id
+      }
+    });
+
+    io.emit("alert_created", alert);
+  }
+
+  res.json({
+    detection,
+    distress,
+    incident,
+    assistanceCheck,
+    alert
+  });
 }
 
-// -------------------------- INCIDENTS --------------------------
-const getHumanIncidents = (req, res) => {
-  try {
-    return res.json({
-      success: true,
-      incidents,
-    });
-  } catch (error) {
-    console.error("getHumanIncidents error:", error);
-    return res.status(500).json({
-      success: false,
-      error: "Server error while fetching incidents",
-    });
+function respondToAssistanceCheck(req, res) {
+  const { id } = req.params;
+  const { response } = req.body;
+
+  const updatedCheck = updateCheckResponse(id, response);
+  if (!updatedCheck) {
+    return res.status(404).json({ error: "Assistance check not found" });
   }
-};
 
-const postHumanDetection = async (req, res) => {
-  try {
-    if (!req.body) {
-      return res.status(400).json({
-        success: false,
-        error: "Request body is missing",
-      });
-    }
+  const followUp = response === "no_response" ? buildEmergencyPrompt() : null;
 
-    const {
-      type,
-      latitude,
-      longitude,
-      confidence,
-      timestamp,
-      droneId,
-      immobile = false,
-      audioLabel = null,
-    } = req.body;
-
-    if (
-      type !== "human" ||
-      latitude === undefined ||
-      longitude === undefined ||
-      confidence === undefined ||
-      !timestamp ||
-      !droneId
-    ) {
-      return res.status(400).json({
-        success: false,
-        error: "Missing or invalid required fields",
-      });
-    }
-
-    const detection = {
-      id: generateId("det"),
-      type,
-      latitude,
-      longitude,
-      confidence,
-      timestamp,
-      droneId,
-      immobile,
-      audioLabel,
-    };
-
-    detections.push(detection);
-
-    const io = req.app.get("io");
-    if (io) {
-      io.emit("human_detected", detection);
-    }
-
-    let assistanceCheck = null;
-
-    // Asks if human is okay
-    if (immobile === true) {
-      assistanceCheck = await startAssistanceCheck(detection, io);
-    }
-
-    return res.status(201).json({
-      success: true,
-      detection,
-      assistanceCheck,
-      incident: null,
-      alert: null,
-    });
-  } catch (error) {
-    console.error("postHumanDetection error:", error);
-    return res.status(500).json({
-      success: false,
-      error: "Server error while processing human detection",
-    });
-  }
-};
-
-const postHumanResponse = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { transcript } = req.body || {};
-
-    const assistanceCheck = assistanceChecks.find((item) => item.id === id);
-
-    if (!assistanceCheck) {
-      return res.status(404).json({
-        success: false,
-        error: "Assistance check not found",
-      });
-    }
-
-    const analysis = await handleTranscriptResponse(
-        assistanceCheck,
-        transcript || ""
-    );
-
-    return res.json({
-      success: true,
-      assistanceCheck,
-      analysis,
-    });
-  } catch (error) {
-    console.error("postHumanResponse error:", error);
-    return res.status(500).json({
-      success: false,
-      error: "Server error while processing human response",
-    });
-  }
-};
+  res.json({
+    updatedCheck,
+    followUp
+  });
+}
 
 module.exports = {
-    postHumanDetection,
-    getHumanIncidents,
-    postHumanResponse
+  handleHumanDetection,
+  respondToAssistanceCheck
 };

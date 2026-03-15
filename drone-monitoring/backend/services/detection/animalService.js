@@ -1,17 +1,16 @@
 let animals = [];
 
-function addAnimalDetection(type, latitude, longitude) {
-
+function addAnimalDetection(type, latitude, longitude, extra = {}) {
   const animal = {
     id: "animal_" + Date.now(),
-    type: type,
-    latitude: latitude,
-    longitude: longitude,
-    timestamp: new Date()
+    type,
+    latitude,
+    longitude,
+    timestamp: new Date(),
+    ...extra
   };
 
   animals.push(animal);
-
   return animal;
 }
 

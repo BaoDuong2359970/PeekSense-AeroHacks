@@ -1,5 +1,5 @@
-const { assistanceChecks } = require("./stores/assistanceCheckStore");
-const { incidents, alerts } = require("./stores/humanStore");
+const { assistanceChecks } = require("../stores/assistanceCheckStore");
+const { incidents, alerts } = require("../stores/humanStore");
 const { generateHumanCheckPrompt, analyzeHumanResponse, generateIncidentSummary } = require("./geminiService");
 const { synthesizeSpeech } = require("./elevenLabsService");
 

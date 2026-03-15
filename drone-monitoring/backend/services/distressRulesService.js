@@ -1,36 +1,35 @@
-function evaluateHumanDistress(detection) {
-  if (detection.immobile === true && detection.audioLabel === "scream") {
+function evaluateDistress(humanDetection) {
+  const status = humanDetection.status || "unknown";
+  const speed = humanDetection.movement?.speed ?? null;
+  const noResponse = humanDetection.noResponse === true;
+  const soundLabel = (humanDetection.soundLabel || "").toLowerCase();
+
+  if (
+    status === "lying_on_ground" ||
+    noResponse ||
+    soundLabel.includes("scream") ||
+    soundLabel.includes("help")
+  ) {
     return {
       isDistress: true,
       severity: "critical",
-      message: "Unresponsive human with distress audio detected",
+      reason: "Possible human in distress detected"
     };
   }
 
-  // And is not responding to audio
-  if (detection.immobile === true) {
-    return {
-      isDistress: true,
-      severity: "critical",
-      message: "Unresponsive human detected",
-    };
-  }
-
-  if (detection.audioLabel === "scream") {
+  if (speed === 0 && status === "immobile") {
     return {
       isDistress: true,
       severity: "high",
-      message: "Distress audio detected from human",
+      reason: "Human immobile for suspicious duration"
     };
   }
 
   return {
     isDistress: false,
-    severity: null,
-    message: null,
+    severity: "low",
+    reason: "No strong distress indicators"
   };
 }
 
-module.exports = {
-  evaluateHumanDistress,
-};
+module.exports = { evaluateDistress };
